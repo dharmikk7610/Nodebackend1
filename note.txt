@@ -1,0 +1,9 @@
+video and user schema 
+proxy CORS (whitelabbling)
+
+
+password  : bycrpt -->> database call before use
+
+when the add usermethod in schema  use the aggregate-pipeline  
+
+
