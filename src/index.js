@@ -1,29 +1,43 @@
 // require('dotenv').config({path:'./env'})
 // import  { Mongoose }  from "mongoose";
 // require Mongoos from 'mongoose' ;
-import { Mongoose } from "mongoose";
-import { DB_NAME } from "./constants.js";
+import mongoose, { Mongoose } from "mongoose";
+// import { DB_NAME } from "./constants.js";
 import DB_CONNECTION from "./db/index.js";
-
+import express from "express"
 import dotenv from 'dotenv';
 import app from "./app.js";
+import cookieParser from "cookie-parser";
+import userroute from "./routes/userroute.js"
 dotenv.config({ path: './env' });
+const port = 3000;
+app.use(express.json());
+app.use('/user',userroute);
+
 
 //console.log("MONGODB_URL = ", process.env.MONGODB_URL);
+app.use(cookieParser())
 
 
-
-DB_CONNECTION()
-.then(()=>{
-  app.listen(process.env.PORT , ()=>{
-    console.log(`server start at port ${process.env.PORT}`);
-    
-  })
-})
-.catch((err)=>{
-  console.log("error in server ..",err);
+mongoose.connect('mongodb://127.0.0.1:27017/mytube').then(()=>{
+  console.log("db connected sucessfully");
   
 })
+.catch((err)=>{
+  console.log("saw the error indb connection..!!");
+  
+})
+
+
+  app.listen(port , ()=>{
+    console.log(`server start at port ${port}`);
+    
+  })
+// })
+// .catch((err)=>{
+//   console.log("error in server ..",err);
+  
+// })
 
 
 

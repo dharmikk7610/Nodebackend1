@@ -17,13 +17,12 @@ const userschema  = mongoose.Schema({
         trim : true  
     },
     avatar :{
-        type : String , //cloudnary 
-        required : true 
+        type : String  //cloudnary 
     }
     ,
     coverimg:{
-        type : String ,
-        required :true 
+        type : String 
+        
     },
     password :{
         type:String ,
@@ -33,17 +32,25 @@ const userschema  = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId ,
         ref : "Video"
     },
+    accessToken:{
+        type:String
+    },
     refreshToken:{
         type : String 
     }
 } , {timestamps  : true})
+
+
+
+
+
 
 // password encrpted ............
 userschema.pre("save" ,  async function (next){
 
     if(!this.isModified("password")) return next() ;
 
-    this.password = bcrypt.hash(this.password , 10) ;
+    this.password =  await bcrypt.hash(this.password , 10) ;
     return next() ; 
 })
 
@@ -51,4 +58,5 @@ userschema.methods.ispasswordcorrect = async function(password){
    return await bcrypt.compare(password,this.password)
 }
 
-export const User = mongoose.model("User" , userschema) ;
+ const User = mongoose.model("User2" , userschema) ;
+export default User ;
