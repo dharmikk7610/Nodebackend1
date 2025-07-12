@@ -1,7 +1,8 @@
 import mongoose,{Schema} from "mongoose";
 import bcrypt from 'bcrypt' ;
+import cloudinary from 'cloudinary' ;
 
-const userschema  = mongoose.Schema({
+const  userschema  = mongoose.Schema({
     username:{
         type:String,
         required :true ,
@@ -40,8 +41,19 @@ const userschema  = mongoose.Schema({
     }
 } , {timestamps  : true})
 
+//cloudinary
 
+// cloudinary.v2.config({
+//     cloud_name:"dczngjmsb" ,
+//     api_secret:"p3H7IaGIcrI8uKG6357cRQ6PqmQ",
+//     api_key:"899889586444528"
+// })
 
+// userschema.methods.uploadfile = async function(path){
+//     const res = await  cloudinary.v2.uploader.upload(path);
+//     return res ;
+
+// }
 
 
 
@@ -57,6 +69,8 @@ userschema.pre("save" ,  async function (next){
 userschema.methods.ispasswordcorrect = async function(password){
    return await bcrypt.compare(password,this.password)
 }
+
+
 
  const User = mongoose.model("User2" , userschema) ;
 export default User ;

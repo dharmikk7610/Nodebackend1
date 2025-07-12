@@ -4,20 +4,22 @@
 import mongoose, { Mongoose } from "mongoose";
 // import { DB_NAME } from "./constants.js";
 import DB_CONNECTION from "./db/index.js";
-import express from "express"
-import dotenv from 'dotenv';
-import app from "./app.js";
-import cookieParser from "cookie-parser";
-import userroute from "./routes/userroute.js"
-dotenv.config({ path: './env' });
-const port = 3000;
-app.use(express.json());
-app.use('/user',userroute);
-
-
-//console.log("MONGODB_URL = ", process.env.MONGODB_URL);
+import express from "express" ;
+import dotenv from 'dotenv' ;
+import app from "./app.js" ;
+import cookieParser from "cookie-parser" ;
+import userroute from "./routes/userroute.js" ;
+import userController from './controller/usercontroller.js'
+dotenv.config({ path: './env' }) ;
+const port = 4000 ;
+app.use(express.json()) ;
+app.use('/user',userroute) ;
+// console.log("MONGODB_URL = ", process.env.MONGODB_URL);
 app.use(cookieParser())
 
+//jwt ..>
+const { refreshaccesstoken } = userController;
+app.post("/auth/accesstoken",refreshaccesstoken);
 
 mongoose.connect('mongodb://127.0.0.1:27017/mytube').then(()=>{
   console.log("db connected sucessfully");

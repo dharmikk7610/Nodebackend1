@@ -5,12 +5,41 @@ import generaterefreshtoken from '../utils/Refresetoken.js'
 import jwt from "jsonwebtoken"
 import { configDotenv } from 'dotenv'
 // import cookie from "cookie-parser"
-const createuser = async(req , res)=>{
 
+const getUser = async (req, res) => {
+  try {
+    const mydata = await User.find(); // Add await here
+    console.log(mydata);
+
+    if (mydata.length > 0) {
+      res.json({
+        message: "Data fetched successfully",
+        data: mydata
+      });
+    } else {
+      res.json({
+        message: "No data found."
+      });
+    }
+  } catch (error) {
+    res.status(401).json({
+      message: "401 -- Error occurred",
+      error: error.message
+    });
+  }
+};
+
+const createuser = async(req , res)=>{
+const {url} = req.cloudinaryFile ;
     try {
         // req.body.password = ;
         const data =req.body ;
         const saveuser = await User.create(data);
+        saveuser.avatar = url ;
+        saveuser.save({validateBeforeSave:false});
+        // User.uploadfile();
+        
+
         res.json({
             message:"add user sucessfully" ,
             data :saveuser
@@ -33,10 +62,21 @@ const loginuser = async(req,res)=>{
     const {email,password} = req.body;
     const myuser = await  User.findOne({email:email});
 
+    // console.log("password-->",password,typeof(password));
+    // const password1 = 
+
+    if (!myuser) {
+  return res.status(404).json({ message: "User not found" });
+}
 
     if(myuser!=null)
     {
-       const ispassword = await myuser.ispasswordcorrect(password); 
+       const ispassword = await myuser.ispasswordcorrect(password);
+      
+       if (!ispassword) {
+  return res.status(401).json({ message: "Invalid password" });
+}
+       
        if(ispassword)
         {
             const accesstoken = generatetoken(myuser._id);
@@ -50,7 +90,7 @@ const loginuser = async(req,res)=>{
          //cookies-
          const  loguser = await User.findById(myuser._id);
          const options = {
-            httpOnly:true ,
+            httpOnly:true,
             secure:true
 
          }
@@ -83,7 +123,7 @@ const loginuser = async(req,res)=>{
 
 const logout = async(req , res)=>{
  await User.findByIdAndUpdate(req.user1._id, {
-  $set: {
+  $set : {
     refreshToken: undefined,
   },
 }, { new: true });
@@ -103,19 +143,20 @@ return res
 
 })
 }
+// -------------
 
 const refreshaccesstoken = async(req,res)=>{
 
-    const myrefreshtoken = req.cookies.refreshToken ;
+    const myrefreshtoken = req.cookies.refreshtoken ;
 
     if(!myrefreshtoken)
     {
        return  res.status(401).json({
-            message:"anuthrized request ..>"
+            message:"anuthrized request .."
         })
     }
     try {
-        const decodedtoken = jwt.verify(myrefreshtoken,process.env.REFRESHSECRECTKEY) ;
+        const decodedtoken = jwt.verify(myrefreshtoken,process.env.REFRESHSECRETKEY) ;
 
         const user = await User.findById(decodedtoken?._id); 
 
@@ -161,4 +202,78 @@ const refreshaccesstoken = async(req,res)=>{
     }
 }
 
-export default {createuser,loginuser,logout,refreshaccesstoken};
+const changePassword = async(req,res)=>{
+
+    const {oldpassword ,newpassword} = req.body ;
+
+    const mydata = await User.findById(req.user1?._id);
+
+     const ispassword = await mydata.ispasswordcorrect(oldpassword);
+
+     if(!ispassword)
+     {
+       return  res.status(400).json({message :"saw the error"});
+     }
+
+    mydata.password = newpassword ;
+    await mydata.save({validateBeforeSave:false}) ;
+ 
+    return res.status(200).json({message:"change the password"})
+
+  }
+
+  const getUserChanalProfile =async (req,res)=>{
+
+   const {username} = req.body ;
+     if (!username) {
+      return res.status(400).json({ message: "Username is required." });
+    }
+
+    const userprofile = await User.aggregate([
+    {
+      $match:{
+        username:username?.toLowerCase()
+      }
+    },
+    {
+      $lookup:{
+        from :"subscribes",
+        localField :"_id" ,
+        foreignField :"channel",
+        as:"subscribers"
+      }
+
+
+    },
+    {
+      $lookup:{
+        from :"subscribes",
+        localField :"_id" ,
+        foreignField :"subscriber",
+        as:"subscribersTO"
+      }
+
+
+    },
+    {
+      $addFields:{
+        subscriberCount:{
+          $size:"$subscribers"
+        },
+        channelsubscriberCount:{
+          $size:"$subscribersTO"
+        }
+      }
+    }
+   ]);
+     if (!userprofile.length) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    return res.status(200).json(userprofile[0]);
+
+  } 
+
+
+
+export default {createuser,loginuser,logout,refreshaccesstoken,changePassword,getUser,getUserChanalProfile};
